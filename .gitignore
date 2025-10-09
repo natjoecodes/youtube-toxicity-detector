@@ -1,0 +1,17 @@
+# Ignore virtual environments
+venv/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+
+# Ignore data files
+*.csv
+*.json
+*.log
+
+# Ignore macOS junk
+.DS_Store
+
+# Ignore secrets
+.env
