@@ -1,68 +1,73 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 from transformers import pipeline
-from scripts.fetch_comments import get_comments  # your existing function
+from scripts.fetch_comments import get_comments
 
-# Streamlit App Title
-st.title("YouTube Comment Toxicity Detector")
-st.write("Paste a YouTube video link to see the toxicity breakdown of its comments.")
+app = Flask(__name__)
+CORS(app)
 
-# Input: YouTube URL
-url = st.text_input("YouTube Video URL")
+print("Loading toxicity model...")
+classifier = pipeline(
+    "text-classification",
+    model="unitary/toxic-bert",
+    tokenizer="unitary/toxic-bert"
+)
+print("Model loaded.")
 
-if url:
+
+def extract_video_id(url):
     if "v=" in url:
-        video_id = url.split("v=")[-1].split("&")[0]
+        return url.split("v=")[-1].split("&")[0]
     elif "youtu.be/" in url:
-        video_id = url.split("youtu.be/")[-1].split("?")[0]
-    else:
-        st.error("Invalid YouTube URL format.")
-        st.stop()
+        return url.split("youtu.be/")[-1].split("?")[0]
+    return None
 
-    st.write(f"Fetching comments for video ID: `{video_id}` ...")
-    
-    # Fetch comments
-    try:
-        df = get_comments(video_id, max_results=50)  # limit to 50 for speed
-    except Exception as e:
-        st.error(f"Error fetching comments: {e}")
-        st.stop()
+
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    data = request.json
+    url = data.get("url")
+
+    if not url:
+        return jsonify({"error": "URL missing"}), 400
+
+    video_id = extract_video_id(url)
+
+    if not video_id:
+        return jsonify({"error": "Invalid YouTube URL"}), 400
+
+    df = get_comments(video_id, max_results=50)
 
     if df.empty:
-        st.warning("No comments found for this video.")
-        st.stop()
+        return jsonify({"error": "No comments found"}), 404
 
-    st.success(f"Fetched {len(df)} comments.")
+    scores = []
+    toxic_comments = []
 
-    # Analyze toxicity
-    st.write("Analyzing toxicity...")
-    classifier = pipeline("text-classification", model="unitary/toxic-bert")
-
-    toxicity_scores = []
     for comment in df["text"].astype(str).tolist():
         if comment.strip():
-            result = classifier(comment[:512])[0]  # truncate long comments
-            toxicity_scores.append(result["score"])
+            pred = classifier(comment[:512])[0]
+            score = pred["score"]
+
+            scores.append(score)
+
+            if score > 0.5:
+                toxic_comments.append(comment)
         else:
-            toxicity_scores.append(None)
+            scores.append(0)
 
-    df["toxicity_score"] = toxicity_scores
-    df["is_toxic"] = df["toxicity_score"].apply(lambda x: 1 if x and x > 0.5 else 0)
+    df["toxicity_score"] = scores
+    df["is_toxic"] = df["toxicity_score"].apply(lambda x: 1 if x > 0.5 else 0)
+
+    toxic_count = int(df["is_toxic"].sum())
+    non_toxic_count = int(len(df) - toxic_count)
+
+    return jsonify({
+        "toxic": toxic_count,
+        "non_toxic": non_toxic_count,
+        "top_comments": toxic_comments[:5]
+    })
 
 
-    # Pie Chart
-    counts = df["is_toxic"].value_counts().reindex([0,1], fill_value=0)
-    fig, ax = plt.subplots()
-    ax.pie(counts, labels=["Non-Toxic", "Toxic"], autopct="%1.1f%%", colors=["#4CAF50", "#F44336"])
-    st.pyplot(fig)
-
-    # Show top toxic comments
-    st.subheader("Top Toxic Comments")
-    top_toxic = df[df["is_toxic"]==1]["text"].head(5)
-    if not top_toxic.empty:
-        for i, comment in enumerate(top_toxic, 1):
-            st.write(f"{i}. {comment}")
-    else:
-        st.write("No toxic comments detected.")
-        
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

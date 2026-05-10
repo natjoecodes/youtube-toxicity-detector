@@ -2,16 +2,17 @@
 # Python backend
 # -------------------------
 backend/venv/
+backend/.env
+backend/data/
+
 __pycache__/
 *.pyc
 
-# Secrets
-backend/.env
-
-# Generated data
-*.csv
-*.json
+# Logs
 *.log
+
+# HuggingFace cache
+.cache/
 
 # -------------------------
 # React frontend
@@ -20,6 +21,6 @@ frontend/node_modules/
 frontend/dist/
 
 # -------------------------
-# OS junk
+# macOS junk
 # -------------------------
 .DS_Store
