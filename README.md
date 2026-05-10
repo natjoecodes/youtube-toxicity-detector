@@ -1,21 +1,78 @@
-# YouTube Comment Toxicity Analyzer 🎯
+# YouTube Toxicity Detector ▶️
 
-A Streamlit-based web app that analyzes the toxicity of YouTube video comments using Hugging Face models.
+A full-stack web app that analyzes the toxicity of comments on any public YouTube video using NLP and visualizes the results in a modern dashboard.
 
-## 🚀 Features
-- Fetches YouTube comments via script
-- Analyzes toxicity using Hugging Face Transformers
-- Displays results visually in a pie chart
+## Features
 
-## 🧠 Tech Stack
+- Fetch YouTube comments using YouTube Data API
+- Toxicity detection using Hugging Face (`unitary/toxic-bert`)
+- Interactive pie chart visualization
+- Toxicity score and severity classification
+- Top toxic comments display
+- Responsive UI for desktop and mobile
+
+## Tech Stack
+
+**Frontend**
+- React
+- Vite
+- Chart.js
+
+**Backend**
+- Flask
 - Python
-- Hugging Face Transformers
-- Streamlit
-- Pandas
 
-## 🖥️ Run Locally
+**ML / APIs**
+- Hugging Face Transformers
+- YouTube Data API v3
+
+## Run Locally
+
+Clone repo:
+
 ```bash
-git clone https://github.com/yourusername/youtube-toxicity-detector.git
+git clone https://github.com/natjoecodes/youtube-toxicity-detector.git
 cd youtube-toxicity-detector
+```
+
+Backend:
+
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-streamlit run app.py
+python app.py
+```
+
+Create `backend/.env`:
+
+```env
+YOUTUBE_API_KEY=your_api_key_here
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+## Limitations
+
+- Currently analyzes first 50 comments
+- Replies are not included
+- Primarily optimized for English comments
+
+## Author
+
+**Nathan Jose**  
+LinkedIn: https://www.linkedin.com/in/natjoe/  
+GitHub: https://github.com/natjoecodes
