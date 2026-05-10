@@ -1,12 +1,7 @@
 Flask
 flask-cors
-transformers
 pandas
 python-dotenv
 google-api-python-client
 gunicorn
-sentencepiece
-accelerate
-
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.11.0+cpu
+requests
