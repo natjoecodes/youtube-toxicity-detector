@@ -47,6 +47,7 @@ def analyze_comment(comment):
 
     try:
         result = response.json()
+        print("HF RESULT:", result)
 
         print("HF RESULT:", result)
 
