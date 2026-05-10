@@ -108,13 +108,13 @@ def analyze():
 
             scores.append(score)
 
-            if score > 0.5:
+            if score > 0.1:
                 toxic_comments.append(comment)
 
         df["toxicity_score"] = scores
 
         df["is_toxic"] = df["toxicity_score"].apply(
-            lambda x: 1 if x > 0.5 else 0
+            lambda x: 1 if x > 0.1 else 0
         )
 
         toxic_count = int(df["is_toxic"].sum())
