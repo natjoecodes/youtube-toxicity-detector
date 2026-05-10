@@ -1,17 +1,25 @@
-# Ignore virtual environments
-venv/
-
-# Ignore compiled Python files
+# -------------------------
+# Python backend
+# -------------------------
+backend/venv/
 __pycache__/
 *.pyc
 
-# Ignore data files
+# Secrets
+backend/.env
+
+# Generated data
 *.csv
 *.json
 *.log
 
-# Ignore macOS junk
-.DS_Store
+# -------------------------
+# React frontend
+# -------------------------
+frontend/node_modules/
+frontend/dist/
 
-# Ignore secrets
-.env
+# -------------------------
+# OS junk
+# -------------------------
+.DS_Store
