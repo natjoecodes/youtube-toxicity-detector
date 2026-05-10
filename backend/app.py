@@ -9,7 +9,7 @@ load_dotenv()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-API_URL = "https://api-inference.huggingface.co/models/unitary/toxic-bert"
+API_URL = "https://router.huggingface.co/hf-inference/models/unitary/toxic-bert"
 
 headers = {
     "Authorization": f"Bearer {HF_TOKEN}"
@@ -45,11 +45,11 @@ def analyze_comment(comment):
         print(response.text)
         return 0
 
-    try:
-        result = response.json()
-        print("HF RESULT:", result)
+    result = response.json()
 
-        print("HF RESULT:", result)
+    print("HF RESULT:", result)
+
+    try:
 
         if isinstance(result, list) and len(result) > 0:
 
@@ -61,13 +61,10 @@ def analyze_comment(comment):
             if label == "toxic":
                 return score
 
-            return 0
-
         return 0
 
     except Exception as e:
-        print("JSON ERROR:", e)
-        print(response.text)
+        print("PARSING ERROR:", e)
         return 0
 
 
