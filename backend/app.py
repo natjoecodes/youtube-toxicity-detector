@@ -51,22 +51,21 @@ def analyze_comment(comment):
 
     try:
 
-        if isinstance(result, list) and len(result) > 0:
+        labels = result[0]
 
-            prediction = result[0]
+        toxic_score = 0
 
-            label = prediction.get("label", "").lower()
-            score = prediction.get("score", 0)
+        for item in labels:
 
-            if label == "toxic":
-                return score
+            if item["label"].lower() == "toxic":
+                toxic_score = item["score"]
+                break
 
-        return 0
+        return toxic_score
 
     except Exception as e:
         print("PARSING ERROR:", e)
         return 0
-
 
 @app.route("/")
 def home():
@@ -91,7 +90,7 @@ def analyze():
 
         video_title = get_video_title(video_id)
 
-        df = get_comments(video_id, max_results=50)
+        df = get_comments(video_id, max_results=15)
 
         if df.empty:
             return jsonify({"error": "No comments found"}), 404
