@@ -2,16 +2,19 @@
 # Python backend
 # -------------------------
 backend/venv/
-backend/.env
 backend/data/
-
 __pycache__/
 *.pyc
+
+# Python cache
+*.pyo
+*.pyd
+*.pytest_cache/
 
 # Logs
 *.log
 
-# HuggingFace cache
+# HuggingFace / model cache
 .cache/
 
 # -------------------------
@@ -20,7 +23,17 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 
+# Build / misc
+dist/
+build/
+
 # -------------------------
-# macOS junk
+# Environment files
+# -------------------------
+.env
+.env.*
+
+# -------------------------
+# macOS
 # -------------------------
 .DS_Store
