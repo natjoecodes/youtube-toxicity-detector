@@ -26,15 +26,8 @@ def extract_video_id(url):
         return url.split("youtu.be/")[-1].split("?")[0]
     return None
 
-HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-
-API_URL = "https://api-inference.huggingface.co/models/unitary/toxic-bert"
-
-headers = {
-    "Authorization": f"Bearer {HF_API_TOKEN}"
-}
-
 def analyze_comment(comment):
+
     payload = {
         "inputs": comment[:512]
     }
@@ -47,29 +40,33 @@ def analyze_comment(comment):
     )
 
     print("HF STATUS:", response.status_code)
-    print("HF RESPONSE:", response.text)
 
     if response.status_code != 200:
+        print(response.text)
         return 0
 
     try:
         result = response.json()
 
-        if isinstance(result, list):
-            labels = result[0]
+        print("HF RESULT:", result)
 
-            toxic_score = 0
+        if isinstance(result, list) and len(result) > 0:
 
-            for item in labels:
-                if item["label"].lower() == "toxic":
-                    toxic_score = item["score"]
+            prediction = result[0]
 
-            return toxic_score
+            label = prediction.get("label", "").lower()
+            score = prediction.get("score", 0)
+
+            if label == "toxic":
+                return score
+
+            return 0
 
         return 0
 
     except Exception as e:
         print("JSON ERROR:", e)
+        print(response.text)
         return 0
 
 
@@ -80,55 +77,66 @@ def home():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    data = request.json
-    url = data.get("url")
 
-    if not url:
-        return jsonify({"error": "URL missing"}), 400
+    try:
 
-    video_id = extract_video_id(url)
+        data = request.json
+        url = data.get("url")
 
-    if not video_id:
-        return jsonify({"error": "Invalid YouTube URL"}), 400
+        if not url:
+            return jsonify({"error": "URL missing"}), 400
 
-    video_title = get_video_title(video_id)
+        video_id = extract_video_id(url)
 
-    df = get_comments(video_id, max_results=50)
+        if not video_id:
+            return jsonify({"error": "Invalid YouTube URL"}), 400
 
-    if df.empty:
-        return jsonify({"error": "No comments found"}), 404
+        video_title = get_video_title(video_id)
 
-    scores = []
-    toxic_comments = []
+        df = get_comments(video_id, max_results=50)
 
-    for comment in df["text"].astype(str).tolist():
+        if df.empty:
+            return jsonify({"error": "No comments found"}), 404
 
-        if not comment.strip():
-            scores.append(0)
-            continue
+        scores = []
+        toxic_comments = []
 
-        score = analyze_comment(comment)
+        for comment in df["text"].astype(str).tolist():
 
-        scores.append(score)
+            if not comment.strip():
+                scores.append(0)
+                continue
 
-        if score > 0.5:
-            toxic_comments.append(comment)
+            score = analyze_comment(comment)
 
-    df["toxicity_score"] = scores
+            scores.append(score)
 
-    df["is_toxic"] = df["toxicity_score"].apply(
-        lambda x: 1 if x > 0.5 else 0
-    )
+            if score > 0.5:
+                toxic_comments.append(comment)
 
-    toxic_count = int(df["is_toxic"].sum())
-    non_toxic_count = int(len(df) - toxic_count)
+        df["toxicity_score"] = scores
 
-    return jsonify({
-        "title": video_title,
-        "toxic": toxic_count,
-        "non_toxic": non_toxic_count,
-        "top_comments": toxic_comments[:5]
-    })
+        df["is_toxic"] = df["toxicity_score"].apply(
+            lambda x: 1 if x > 0.5 else 0
+        )
+
+        toxic_count = int(df["is_toxic"].sum())
+        non_toxic_count = int(len(df) - toxic_count)
+
+        return jsonify({
+            "title": video_title,
+            "toxic": toxic_count,
+            "non_toxic": non_toxic_count,
+            "top_comments": toxic_comments[:5]
+        })
+
+    except Exception as e:
+
+        print("BACKEND ERROR:", str(e))
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
