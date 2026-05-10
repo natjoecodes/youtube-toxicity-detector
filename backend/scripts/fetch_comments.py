@@ -69,3 +69,28 @@ def get_comments(video_id, max_results=50, save_csv=False):
         else:
             print(f"HTTP Error: {e}")
         return pd.DataFrame()  # return empty DataFrame on error
+    
+def get_video_title(video_id):
+    """
+    Fetch title of a YouTube video.
+    Returns string title.
+    """
+    youtube = build("youtube", "v3", developerKey=API_KEY)
+
+    try:
+        request = youtube.videos().list(
+            part="snippet",
+            id=video_id
+        )
+
+        response = request.execute()
+        items = response.get("items", [])
+
+        if not items:
+            return "Unknown Video"
+
+        return items[0]["snippet"]["title"]
+
+    except HttpError as e:
+        print(f"Error fetching title: {e}")
+        return "Unknown Video"

@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import pipeline
-from scripts.fetch_comments import get_comments
+from scripts.fetch_comments import get_comments, get_video_title
 
 app = Flask(__name__)
 CORS(app)
@@ -32,6 +32,7 @@ def analyze():
         return jsonify({"error": "URL missing"}), 400
 
     video_id = extract_video_id(url)
+    video_title = get_video_title(video_id)
 
     if not video_id:
         return jsonify({"error": "Invalid YouTube URL"}), 400
@@ -63,6 +64,7 @@ def analyze():
     non_toxic_count = int(len(df) - toxic_count)
 
     return jsonify({
+        "title": video_title,
         "toxic": toxic_count,
         "non_toxic": non_toxic_count,
         "top_comments": toxic_comments[:5]
