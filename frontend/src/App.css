@@ -107,6 +107,12 @@ h1 {
   transform: translateY(-1px);
 }
 
+.search-box button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

@@ -11,6 +11,10 @@ import "./App.css";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function App() {
+  const API_URL =
+    import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+  console.log(API_URL);
+
   const [url, setUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +26,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/analyze", {
+      const response = await fetch(`${API_URL}/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +96,10 @@ function App() {
               if (e.key === "Enter") handleAnalyze();
             }}
           />
-          <button onClick={handleAnalyze}>
+          <button
+            onClick={handleAnalyze}
+            disabled={loading}
+          >
             {loading ? "Analyzing..." : "Analyze"}
           </button>
         </div>

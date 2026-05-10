@@ -26,19 +26,50 @@ def extract_video_id(url):
         return url.split("youtu.be/")[-1].split("?")[0]
     return None
 
+HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+
+API_URL = "https://api-inference.huggingface.co/models/unitary/toxic-bert"
+
+headers = {
+    "Authorization": f"Bearer {HF_API_TOKEN}"
+}
 
 def analyze_comment(comment):
+    payload = {
+        "inputs": comment[:512]
+    }
+
     response = requests.post(
         API_URL,
         headers=headers,
-        json={"inputs": comment[:512]}
+        json=payload,
+        timeout=30
     )
 
-    result = response.json()
+    print("HF STATUS:", response.status_code)
+    print("HF RESPONSE:", response.text)
+
+    if response.status_code != 200:
+        return 0
 
     try:
-        return result[0][0]["score"]
-    except:
+        result = response.json()
+
+        if isinstance(result, list):
+            labels = result[0]
+
+            toxic_score = 0
+
+            for item in labels:
+                if item["label"].lower() == "toxic":
+                    toxic_score = item["score"]
+
+            return toxic_score
+
+        return 0
+
+    except Exception as e:
+        print("JSON ERROR:", e)
         return 0
 
 
